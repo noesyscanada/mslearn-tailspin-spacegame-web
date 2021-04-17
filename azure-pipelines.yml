@@ -96,8 +96,6 @@ steps:
   inputs:
     cwd: '$(System.DefaultWorkingDirectory)'
     projectName: 'Tailspin SpaceGame'
-<<<<<<< HEAD
-=======
   condition: |
     and
     (
@@ -105,7 +103,6 @@ steps:
       eq(variables['Build.Reason'], 'PullRequest')
       eq((variables['System.PullRequest.TargetBranch'], 'master')
     )
->>>>>>> models-package
 
 - task: PublishBuildArtifacts@1
   displayName: 'Publish Artifact: drop'
