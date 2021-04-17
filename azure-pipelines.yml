@@ -101,7 +101,7 @@ steps:
     (
       succeeded(),
       eq(variables['Build.Reason'], 'PullRequest'),
-      eq((variables['System.PullRequest.TargetBranch'], 'master')
+      eq(variables['System.PullRequest.TargetBranch'], 'master')
     )
 
 - task: PublishBuildArtifacts@1
