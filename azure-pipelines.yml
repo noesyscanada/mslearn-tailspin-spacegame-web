@@ -1,5 +1,7 @@
 trigger:
-- '*'
+  branches:
+    include:
+    - master
 
 pool:
   name: 'Default'
