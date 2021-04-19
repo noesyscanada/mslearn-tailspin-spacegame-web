@@ -191,3 +191,37 @@ stages:
               azureSubscription: 'Space Game ASC'
               appName: '$(WebAppNameStaging)'
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/Tailspin.SpaceGame.Web.zip'
+
+
+- stage: 'Prod'
+  displayName: 'Deploy the web application'
+  dependsOn: Staging
+  condition: |
+    and
+    (
+      succeeded(),
+      eq(variables['Build.SourceBranchName'], variables['releaseBranchName'])
+    )  
+  jobs:
+  - deployment: Deploy
+    pool:
+      name: 'Default'
+
+    environment: prod
+
+    variables:
+    - group: Release
+
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+
+          - task: AzureWebApp@1
+            displayName: 'Azure App Service Deploy: website'
+            inputs:
+              azureSubscription: 'Space Game ASC'
+              appName: '$(WebAppNameProd)'
+              package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/Tailspin.SpaceGame.Web.zip'
