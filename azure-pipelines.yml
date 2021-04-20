@@ -198,7 +198,7 @@ stages:
     dependsOn: Deploy
     displayName: 'Run UI tests'
     pool:
-      pool: 'Default'
+      name: 'Default'
     variables:
     - group: 'Release'
     steps: 
