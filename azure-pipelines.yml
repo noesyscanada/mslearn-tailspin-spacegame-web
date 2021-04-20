@@ -294,6 +294,7 @@ stages:
             inputs:
               azureSubscription: 'Space Game ASC'
               webAppName: '$(WebAppNameProd)'
+              resourceGroupName: 'tailspin-space-game-rg'
               sourceSlot: 'swap'
               targetSlot: 'production'
               action: 'Swap Slots'
