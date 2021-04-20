@@ -17,9 +17,4 @@
     <PackageReference Include="Microsoft.Edge.SeleniumTools" Version="3.141.1" />
     <PackageReference Include="WebDriverManager" Version="2.9.1" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Tailspin.SpaceGame.Web\Tailspin.SpaceGame.Web.csproj" />
-  </ItemGroup>
-
 </Project>
