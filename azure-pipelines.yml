@@ -8,6 +8,7 @@ variables:
   releaseBranchName: 'master'
   dotnetSdkVersion: '3.1.300'
   runIUTests: false
+  runLoadTests: false
 
 schedules:
 - cron: '0 3 * * *'
@@ -225,8 +226,9 @@ stages:
         projects: '$(System.DefaultWorkingDirectory)/**/*UITests.csproj'
 
   - job: RunLoadTests
-    dependsOn: Deploy
     displayName: 'Run load tests'
+    dependsOn: Deploy
+    condition: eq(variables['runLoadTests'], true)
     pool:
       name: 'Default'
     variables:
@@ -272,7 +274,7 @@ stages:
     - group: Release
 
     strategy:
-      runOnce:
+      blueGreen:
         deploy:
           steps:
           - download: current
@@ -282,5 +284,41 @@ stages:
             displayName: 'Azure App Service Deploy: website'
             inputs:
               azureSubscription: 'Space Game ASC'
+              deployToSlotOrASE: 'true'
+              slotName: 'swap'
               appName: '$(WebAppNameProd)'
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/Tailspin.SpaceGame.Web.zip'
+
+        routeTraffic:
+          #delay: 60m
+          steps:
+          - task: AzureAppServiceManage@0
+            displayName: 'Swap deployment slots'
+            inputs:
+              azureSubscription: 'Space Game ASC'
+              webAppName: '$(WebAppNameProd)'
+              sourceSlot: 'swap'
+              targetSlot: 'production'
+              action: 'Swap Slots'
+
+        postRouteTaffic:
+          pool: server
+          steps:
+          - script: echo monitor app health
+
+        on:
+          failure:
+            steps:
+            - task: AzureAppServiceManage@0
+              displayName: 'Rollback deployment'
+              inputs:
+                azureSubscription: 'Space Game ASC'
+                webAppName: '$(WebAppNameProd)'
+                sourceSlot: 'production'
+                targetSlot: 'swap'
+                action: 'Swap Slots'
+
+          success:
+            steps:
+            - script: echo checks passed...
+
