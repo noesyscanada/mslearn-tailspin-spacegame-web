@@ -274,7 +274,7 @@ stages:
     - group: Release
 
     strategy:
-      blueGreen:
+      runOnce:
         deploy:
           steps:
           - download: current
@@ -289,9 +289,6 @@ stages:
               appName: '$(WebAppNameProd)'
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/Tailspin.SpaceGame.Web.zip'
 
-        routeTraffic:
-          #delay: 60m
-          steps:
           - task: AzureAppServiceManage@0
             displayName: 'Swap deployment slots'
             inputs:
@@ -300,25 +297,3 @@ stages:
               sourceSlot: 'swap'
               targetSlot: 'production'
               action: 'Swap Slots'
-
-        postRouteTaffic:
-          pool: server
-          steps:
-          - script: echo monitor app health
-
-        on:
-          failure:
-            steps:
-            - task: AzureAppServiceManage@0
-              displayName: 'Rollback deployment'
-              inputs:
-                azureSubscription: 'Space Game ASC'
-                webAppName: '$(WebAppNameProd)'
-                sourceSlot: 'production'
-                targetSlot: 'swap'
-                action: 'Swap Slots'
-
-          success:
-            steps:
-            - script: echo checks passed...
-
