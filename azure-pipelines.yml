@@ -7,6 +7,7 @@ variables:
   buildConfiguration: 'Release'
   releaseBranchName: 'master'
   dotnetSdkVersion: '3.1.300'
+  runIUTests: false
 
 schedules:
 - cron: '0 3 * * *'
@@ -195,10 +196,11 @@ stages:
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/Tailspin.SpaceGame.Web.zip'
 
   - job: RunUITests
-    dependsOn: Deploy
     displayName: 'Run UI tests'
+    dependsOn: Deploy
+    condition: eq(variables['runIUTests'], true)
     pool:
-      name: 'Default'
+      vmImage: 'windows-2019'
     variables:
     - group: 'Release'
     steps: 
@@ -221,6 +223,33 @@ stages:
         arguments: '--no-build --configuration $(buildConfiguration)'
         publishTestResults: true
         projects: '$(System.DefaultWorkingDirectory)/**/*UITests.csproj'
+
+  - job: RunLoadTests
+    dependsOn: Deploy
+    displayName: 'Run load tests'
+    pool:
+      name: 'Default'
+    variables:
+    - group: Release
+    steps:
+    - script: |
+        wget -c ftp.ps.pl/pub/apache/jmeter/binaries/apache-jmeter-$(jmeterVersion).tgz
+        tar -xzf apache-jmeter-$(jmeterVersion).tgz
+      displayName: 'Install Apache JMeter'
+
+    - script: apache-jmeter-$(jmeterVersion)/bin/./jmeter -n -t LoadTest.jmx -o Results.xml -Jhostname=$(STAGING_HOSTNAME)
+      displayName: 'Run Load tests'
+
+    - script: |
+        sudo apt-get update
+        sudo apt-get install xsltproc
+        xsltproc JMeter2JUnit.xsl Results.xml > JUnit.xml
+      displayName: 'Transform JMeter output to JUnit'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: JUnit
+        testResultsFiles: JUnit.xml
 
 - stage: 'Prod'
   displayName: 'Deploy to the production environment'
